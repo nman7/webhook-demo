@@ -15,7 +15,7 @@ export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
 
   // 1) Auto-generate on first render
   useEffect(() => {
-    const generated = Date.now().toString();
+    const generated = Math.floor(Date.now() / 1000).toString();
     setUserId(generated);
     onUserIdChange(generated);
   }, [onUserIdChange]);
