@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 type DashboardFormProps = {
   onUserIdChange: (id: string) => void;
@@ -15,7 +16,7 @@ export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
 
   // 1) Auto-generate on first render
   useEffect(() => {
-    const generated = Math.floor(Date.now() / 1000).toString();
+    const generated = uuidv4();
     setUserId(generated);
     onUserIdChange(generated);
   }, [onUserIdChange]);
