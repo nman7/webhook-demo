@@ -1,4 +1,3 @@
-// components/DashboardForm.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -11,43 +10,38 @@ type DashboardFormProps = {
 export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [userIdInput, setUserIdInput] = useState("");
   const [userId, setUserId] = useState("");
-  const [status, setStatus] =
-    useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  // Generate an initial UUID on mount
+  // Auto-generate ID once on mount
   useEffect(() => {
-    const initial = uuidv4();
-    setUserId(initial);
-    onUserIdChange(initial);
+    const id = uuidv4();
+    setUserId(id);
+    setUserIdInput(id);
+    onUserIdChange(id);
   }, [onUserIdChange]);
-
-  // Keep parent in sync if the user manually edits the ID
-  useEffect(() => {
-    onUserIdChange(userId);
-  }, [userId, onUserIdChange]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("sending");
 
-    // 1) Pick a new UUID for this submission
-    const nextId = uuidv4();
-    setUserId(nextId);
-    onUserIdChange(nextId);
-
     try {
-      // 2) POST using that fresh nextId
       const res = await fetch(process.env.NEXT_PUBLIC_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, message, userId: nextId }),
+        body: JSON.stringify({ name, message, userId: userIdInput }),
       });
-      if (!res.ok) throw new Error("Network response was not OK");
+
+      if (!res.ok) throw new Error("Network error");
 
       setStatus("sent");
       setName("");
       setMessage("");
+
+      // ✅ Update the actual userId used for display *after* submitting
+      setUserId(userIdInput);
+      onUserIdChange(userIdInput);
     } catch (err) {
       console.error(err);
       setStatus("error");
@@ -55,54 +49,43 @@ export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-gray-50 shadow-lg rounded-lg p-6 space-y-6 max-w-md mx-auto md:max-w-lg"
-    >
-      {/* Name */}
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-black">Name</label>
         <input
           type="text"
-          className="mt-1 block w-full rounded border border-gray-300 bg-gray-100 text-black p-3
-                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
         />
       </div>
 
-      {/* Message */}
       <div>
         <label className="block text-sm font-medium text-black">Message</label>
         <textarea
-          className="mt-1 block w-full rounded border border-gray-300 bg-gray-100 text-black p-3
-                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+          className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           required
         />
       </div>
 
-      {/* User ID */}
       <div>
         <label className="block text-sm font-medium text-black">User ID</label>
         <input
           type="text"
-          className="mt-1 block w-full rounded border border-gray-300 bg-gray-100 text-black p-3
-                     focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
+          className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
+          value={userIdInput}
+          onChange={(e) => setUserIdInput(e.target.value)}
           required
         />
       </div>
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={status === "sending"}
-        className="w-full rounded-lg bg-indigo-600 py-3 text-white font-semibold
-                   hover:bg-indigo-700 transition-colors disabled:opacity-50"
+        className="w-full rounded bg-indigo-600 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
       >
         {status === "sending"
           ? "Sending..."
