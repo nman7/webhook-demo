@@ -1,30 +1,45 @@
 // components/DashboardForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function DashboardForm() {
+type DashboardFormProps = {
+  onUserIdChange: (id: string) => void;
+};
+
+export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [userId, setUserId] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
+  // 1) Auto-generate on first render
+  useEffect(() => {
+    const generated = Date.now().toString();
+    setUserId(generated);
+    onUserIdChange(generated);
+  }, [onUserIdChange]);
+
+  // 2) Tell parent whenever it changes
+  useEffect(() => {
+    onUserIdChange(userId);
+  }, [userId, onUserIdChange]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("sending");
-
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, message, userId }),
       });
-
       if (!res.ok) throw new Error("Network response was not OK");
+
       setStatus("sent");
       setName("");
       setMessage("");
-      setUserId("");
+      // keep the same userId so you can keep posting under this session
     } catch (err) {
       console.error(err);
       setStatus("error");
@@ -33,10 +48,9 @@ export default function DashboardForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-black">
-          Name
-        </label>
+        <label className="block text-sm font-medium text-black">Name</label>
         <input
           type="text"
           className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
@@ -46,10 +60,9 @@ export default function DashboardForm() {
         />
       </div>
 
+      {/* Message */}
       <div>
-        <label className="block text-sm font-medium text-black">
-          Message
-        </label>
+        <label className="block text-sm font-medium text-black">Message</label>
         <textarea
           className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
           value={message}
@@ -58,10 +71,9 @@ export default function DashboardForm() {
         />
       </div>
 
+      {/* User ID */}
       <div>
-        <label className="block text-sm font-medium text-black">
-          User ID
-        </label>
+        <label className="block text-sm font-medium text-black">User ID</label>
         <input
           type="text"
           className="mt-1 block w-full rounded bg-gray-200 text-black p-2"
@@ -71,6 +83,7 @@ export default function DashboardForm() {
         />
       </div>
 
+      {/* Submit */}
       <button
         type="submit"
         disabled={status === "sending"}
