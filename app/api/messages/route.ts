@@ -1,10 +1,16 @@
+// app/api/messages/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 type Msg = { name: string; message: string; userId: string; timestamp: number };
 
-// In-memory store (preserved between calls in dev mode)
-const store: Map<string, Msg[]> = (global as any)._MSG_STORE ?? new Map();
-(global as any)._MSG_STORE = store;
+// Make TypeScript aware of our global in-memory store
+declare global {
+  var _MSG_STORE: Map<string, Msg[]> | undefined;
+}
+
+// Initialize or reuse in-memory store
+const store = globalThis._MSG_STORE ?? new Map<string, Msg[]>();
+globalThis._MSG_STORE = store;
 
 // GET: Return messages for a specific userId
 export async function GET(req: NextRequest) {
@@ -15,7 +21,7 @@ export async function GET(req: NextRequest) {
 
 // POST: Store a new message
 export async function POST(req: NextRequest) {
-  const { name, message, userId } = await req.json();
+  const { name, message, userId } = (await req.json()) as Msg;
 
   if (!name || !message || !userId) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
