@@ -9,7 +9,7 @@ declare global {
 }
 
 // Initialize or reuse in-memory store
-const store = globalThis._MSG_STORE ?? new Map<string, Msg[]>();
+let store = globalThis._MSG_STORE ?? new Map<string, Msg[]>();
 globalThis._MSG_STORE = store;
 
 export async function GET() {

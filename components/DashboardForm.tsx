@@ -11,13 +11,11 @@ export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [userIdInput, setUserIdInput] = useState("");
-  const [userId, setUserId] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   // Auto-generate ID once on mount
   useEffect(() => {
     const id = uuidv4();
-    setUserId(id);
     setUserIdInput(id);
     onUserIdChange(id);
   }, [onUserIdChange]);
@@ -39,8 +37,7 @@ export default function DashboardForm({ onUserIdChange }: DashboardFormProps) {
       setName("");
       setMessage("");
 
-      // ✅ Update the actual userId used for display *after* submitting
-      setUserId(userIdInput);
+      // Let parent know the userId used in submission
       onUserIdChange(userIdInput);
     } catch (err) {
       console.error(err);
